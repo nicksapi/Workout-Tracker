@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk.woff2') format('woff2');
+}
+
 html, body, #root {
   height: 100%;
 }
@@ -12,6 +20,7 @@ body {
   background-image: radial-gradient(ellipse 900px 500px at 50% -10%, rgba(249, 115, 22, 0.12), transparent);
   background-attachment: fixed;
   color-scheme: dark;
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 input[type='number']::-webkit-inner-spin-button,

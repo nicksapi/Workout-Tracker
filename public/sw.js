@@ -1,8 +1,15 @@
 // Minimal offline cache: cache-first for the app shell/assets, network-first
 // for navigations (falls back to the cached shell if offline). No build-time
 // manifest needed — assets get cached the first time they're fetched.
-const CACHE_NAME = 'workout-tracker-v1';
-const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
+const CACHE_NAME = 'workout-tracker-v2';
+const APP_SHELL = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/fonts/space-grotesk.woff2',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

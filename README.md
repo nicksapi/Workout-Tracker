@@ -85,3 +85,7 @@ src/
     bodyMapData.js       simplified body-map SVG geometry
     coverageColor.js     dark-surface sequential color ramp for coverage
 ```
+
+UI font is [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk)
+(SIL Open Font License), self-hosted from `public/fonts/` so it works
+offline like everything else here.
