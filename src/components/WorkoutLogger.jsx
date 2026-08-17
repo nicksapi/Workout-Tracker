@@ -5,6 +5,15 @@ import ExerciseCard from './ExerciseCard.jsx';
 
 const ACTIVE_WORKOUT_KEY = 'workout-tracker:active-workout-id';
 
+function formatDuration(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
 function StartScreen({ onStarted }) {
   const [templates, setTemplates] = useState([]);
   const [name, setName] = useState('');
@@ -31,7 +40,7 @@ function StartScreen({ onStarted }) {
   return (
     <div className="space-y-4">
       <div className="card space-y-3">
-        <h2 className="text-lg font-bold text-slate-900">Start a workout</h2>
+        <h2 className="text-lg font-bold text-neutral-50">Start a workout</h2>
         <input
           className="input"
           placeholder="Workout name (optional)"
@@ -45,19 +54,14 @@ function StartScreen({ onStarted }) {
 
       {templates.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Your templates</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">Your templates</h3>
           {templates.map((t) => (
-            <button
-              key={t.id}
-              disabled={starting}
-              onClick={() => start(t.id, t.name)}
-              className="card flex w-full items-center justify-between text-left hover:border-brand-300"
-            >
+            <button key={t.id} disabled={starting} onClick={() => start(t.id, t.name)} className="card-interactive flex w-full items-center justify-between text-left">
               <span>
-                <span className="block font-medium text-slate-900">{t.name}</span>
-                <span className="block text-xs text-slate-400">{t.exercises.length} exercises</span>
+                <span className="block font-medium text-neutral-100">{t.name}</span>
+                <span className="block text-xs text-neutral-500">{t.exercises.length} exercises</span>
               </span>
-              <span className="text-brand-600">Load →</span>
+              <span className="text-brand-400">Load →</span>
             </button>
           ))}
         </div>
@@ -87,10 +91,10 @@ function SaveTemplateModal({ workoutId, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <form onSubmit={submit} className="card w-full max-w-sm space-y-3" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-semibold text-slate-900">Save as template</h3>
-        {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+        <h3 className="font-semibold text-neutral-50">Save as template</h3>
+        {error && <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
         <input
           autoFocus
           className="input"
@@ -116,6 +120,16 @@ export default function WorkoutLogger() {
   const [showPicker, setShowPicker] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!workout || workout.completed_at) return;
+    const startMs = new Date(workout.started_at).getTime();
+    const tick = () => setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [workout?.id, workout?.started_at, workout?.completed_at]);
 
   useEffect(() => {
     const id = localStorage.getItem(ACTIVE_WORKOUT_KEY);
@@ -178,7 +192,7 @@ export default function WorkoutLogger() {
   }
 
   if (workout === undefined) {
-    return <p className="py-8 text-center text-sm text-slate-400">Loading…</p>;
+    return <p className="py-8 text-center text-sm text-neutral-500">Loading…</p>;
   }
 
   if (workout === null) {
@@ -190,13 +204,19 @@ export default function WorkoutLogger() {
   return (
     <div className="space-y-4 pb-4">
       <div className="card space-y-2">
-        <input
-          className="w-full border-none bg-transparent p-0 text-lg font-bold text-slate-900 focus:outline-none"
-          value={nameDraft}
-          onChange={(e) => setNameDraft(e.target.value)}
-          onBlur={saveName}
-        />
-        <p className="text-xs text-slate-400">
+        <div className="flex items-start justify-between gap-3">
+          <input
+            className="w-full border-none bg-transparent p-0 text-lg font-bold text-neutral-50 focus:outline-none"
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={saveName}
+          />
+          <div className="shrink-0 rounded-lg border border-brand-800/60 bg-brand-500/10 px-3 py-1.5 text-right">
+            <p className="font-mono text-lg font-bold leading-none text-brand-400">{formatDuration(elapsedSeconds)}</p>
+            <p className="text-[10px] uppercase tracking-wide text-brand-500">elapsed</p>
+          </div>
+        </div>
+        <p className="text-xs text-neutral-500">
           Started {new Date(workout.started_at).toLocaleString()} · {workout.exercises.length} exercises ·{' '}
           {totalSets} sets
         </p>
@@ -219,7 +239,7 @@ export default function WorkoutLogger() {
       </div>
 
       {workout.exercises.length === 0 ? (
-        <p className="py-8 text-center text-sm text-slate-400">
+        <p className="py-8 text-center text-sm text-neutral-500">
           No exercises yet. Tap "Add exercise" to get started.
         </p>
       ) : (

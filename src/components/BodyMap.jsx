@@ -9,9 +9,9 @@ export default function BodyMap({ view, coverageByMuscle }) {
       <svg viewBox="0 0 200 290" className="w-full max-w-[180px]">
         {shapes.map((s, i) => {
           const entry = s.muscle ? coverageByMuscle.get(s.muscle) : null;
-          const fill = s.muscle ? coverageColor(entry?.percentage || 0) : '#cbd5e1';
+          const fill = s.muscle ? coverageColor(entry?.percentage || 0) : '#3f3f46';
           const title = s.muscle ? `${s.muscle}: ${(entry?.percentage || 0).toFixed(1)}%` : undefined;
-          const common = { fill, stroke: '#ffffff', strokeWidth: 1.5 };
+          const common = { fill, stroke: '#0a0a0a', strokeWidth: 2 };
 
           let el;
           if (s.shape === 'circle') {
@@ -32,7 +32,7 @@ export default function BodyMap({ view, coverageByMuscle }) {
           );
         })}
       </svg>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{view}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">{view}</p>
     </div>
   );
 }

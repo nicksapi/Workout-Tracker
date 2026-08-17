@@ -3,7 +3,6 @@
 // components didn't need to change when the server was removed.
 import { getDB } from './db.js';
 import { MUSCLE_GROUPS } from './constants.js';
-import { generateRoutine as runRoutineEngine } from './routineEngine.js';
 
 function nowISO() {
   return new Date().toISOString();
@@ -383,59 +382,6 @@ async function saveTemplateFromWorkout(workoutId, name) {
   return { ...record, id };
 }
 
-// ------------------------------------------------------------------ Routines
-
-async function listRoutines() {
-  const db = await getDB();
-  const all = await db.getAll('routines');
-  return all.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
-}
-
-async function getRoutine(id) {
-  const db = await getDB();
-  return db.get('routines', Number(id));
-}
-
-async function generateRoutine({ goal = 'general_fitness', experience_level = 'beginner', days_per_week = 3 }) {
-  const db = await getDB();
-  const allExercises = await db.getAll('exercises');
-  return runRoutineEngine(allExercises, { goal, experienceLevel: experience_level, daysPerWeek: days_per_week });
-}
-
-async function saveRoutine({ name, goal = 'general_fitness', experience_level = 'beginner', days_per_week = 3, days = [] }) {
-  if (!name || !name.trim()) throw new Error('name is required');
-  const db = await getDB();
-  const record = {
-    name: name.trim(),
-    goal,
-    experience_level,
-    days_per_week,
-    is_active: false,
-    created_at: nowISO(),
-    days,
-  };
-  const id = await db.add('routines', record);
-  return { ...record, id };
-}
-
-async function activateRoutine(id) {
-  const db = await getDB();
-  const tx = db.transaction('routines', 'readwrite');
-  const all = await tx.store.getAll();
-  for (const r of all) {
-    r.is_active = r.id === Number(id);
-    await tx.store.put(r);
-  }
-  await tx.done;
-  return db.get('routines', Number(id));
-}
-
-async function deleteRoutine(id) {
-  const db = await getDB();
-  await db.delete('routines', Number(id));
-  return null;
-}
-
 // --------------------------------------------------------------------- Stats
 
 async function getCoverage(days) {
@@ -500,11 +446,5 @@ export const api = {
   updateTemplate,
   deleteTemplate,
   saveTemplateFromWorkout,
-  listRoutines,
-  getRoutine,
-  generateRoutine,
-  saveRoutine,
-  activateRoutine,
-  deleteRoutine,
   getCoverage,
 };

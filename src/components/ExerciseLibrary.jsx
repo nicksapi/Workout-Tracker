@@ -8,8 +8,8 @@ function MuscleChip({ muscle, role }) {
     <span
       className="chip"
       style={{
-        backgroundColor: role === 'primary' ? `${color}26` : '#f1f5f9',
-        color: role === 'primary' ? color : '#64748b',
+        backgroundColor: role === 'primary' ? `${color}26` : '#27272a',
+        color: role === 'primary' ? color : '#a3a3a3',
       }}
     >
       {muscle}
@@ -57,8 +57,8 @@ function AddExerciseForm({ muscleGroups, onCreated, onCancel }) {
 
   return (
     <form onSubmit={submit} className="card space-y-3">
-      <h3 className="font-semibold text-slate-900">Add custom exercise</h3>
-      {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+      <h3 className="font-semibold text-neutral-50">Add custom exercise</h3>
+      {error && <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
       <div>
         <label className="label">Name</label>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Landmine Press" />
@@ -95,7 +95,7 @@ function AddExerciseForm({ muscleGroups, onCreated, onCancel }) {
                 type="button"
                 key={mg.name}
                 onClick={() => toggleMuscle(mg.name)}
-                className={`chip border ${active ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-500'}`}
+                className={`chip border ${active ? 'border-brand-600 bg-brand-500/15 text-brand-400' : 'border-neutral-700 text-neutral-400'}`}
               >
                 {mg.name}
               </button>
@@ -106,14 +106,14 @@ function AddExerciseForm({ muscleGroups, onCreated, onCancel }) {
           <div className="mt-3 space-y-1.5">
             {Object.entries(selectedMuscles).map(([muscle, role]) => (
               <div key={muscle} className="flex items-center justify-between text-sm">
-                <span className="capitalize text-slate-700">{muscle}</span>
+                <span className="capitalize text-neutral-300">{muscle}</span>
                 <div className="flex gap-1">
                   {['primary', 'secondary'].map((r) => (
                     <button
                       type="button"
                       key={r}
                       onClick={() => setRole(muscle, r)}
-                      className={`chip ${role === r ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-500'}`}
+                      className={`chip ${role === r ? 'bg-brand-600 text-white' : 'bg-neutral-800 text-neutral-400'}`}
                     >
                       {r}
                     </button>
@@ -172,8 +172,8 @@ export default function ExerciseLibrary() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Exercise Library</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-xl font-bold text-neutral-50">Exercise Library</h2>
+          <p className="text-sm text-neutral-500">
             {exercises.length} exercises {customCount > 0 && `· ${customCount} custom`}
           </p>
         </div>
@@ -194,12 +194,15 @@ export default function ExerciseLibrary() {
       )}
 
       <div className="space-y-2">
-        <input
-          className="input"
-          placeholder="Search exercises…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">🔍</span>
+          <input
+            className="input pl-9"
+            placeholder="Type to search exercises…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <div className="flex gap-2 overflow-x-auto pb-1">
           <select className="input w-auto shrink-0" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">All categories</option>
@@ -221,23 +224,23 @@ export default function ExerciseLibrary() {
       </div>
 
       {loading ? (
-        <p className="py-8 text-center text-sm text-slate-400">Loading…</p>
+        <p className="py-8 text-center text-sm text-neutral-500">Loading…</p>
       ) : exercises.length === 0 ? (
-        <p className="py-8 text-center text-sm text-slate-400">No exercises match your filters.</p>
+        <p className="py-8 text-center text-sm text-neutral-500">No exercises match your filters.</p>
       ) : (
         <ul className="space-y-2">
           {exercises.map((ex) => (
             <li key={ex.id} className="card">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="font-medium text-slate-900">{ex.name}</p>
-                  <p className="text-xs uppercase tracking-wide text-slate-400">
+                  <p className="font-medium text-neutral-100">{ex.name}</p>
+                  <p className="text-xs uppercase tracking-wide text-neutral-500">
                     {CATEGORY_LABELS[ex.category] || ex.category} · {ex.equipment.replace('_', ' ')}
                     {ex.is_custom ? ' · custom' : ''}
                   </p>
                 </div>
                 {ex.is_custom ? (
-                  <button className="btn-ghost !px-2 !py-1 text-red-500" onClick={() => handleDelete(ex.id)}>
+                  <button className="btn-ghost !px-2 !py-1 text-red-400" onClick={() => handleDelete(ex.id)}>
                     Delete
                   </button>
                 ) : null}

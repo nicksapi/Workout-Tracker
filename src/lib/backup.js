@@ -1,6 +1,6 @@
 import { getDB } from './db.js';
 
-const STORES = ['exercises', 'workouts', 'templates', 'routines'];
+const STORES = ['exercises', 'workouts', 'templates'];
 
 export async function exportData() {
   const db = await getDB();

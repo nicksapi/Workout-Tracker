@@ -1,42 +1,96 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 
+function SetRow({ set, onUpdate, onDelete }) {
+  const [reps, setReps] = useState(set.reps ?? '');
+  const [weight, setWeight] = useState(set.weight ?? '');
+
+  useEffect(() => setReps(set.reps ?? ''), [set.id, set.reps]);
+  useEffect(() => setWeight(set.weight ?? ''), [set.id, set.weight]);
+
+  function commitReps() {
+    const val = reps === '' ? null : Number(reps);
+    if (val !== (set.reps ?? null)) onUpdate({ reps: val });
+  }
+  function commitWeight() {
+    const val = weight === '' ? null : Number(weight);
+    if (val !== (set.weight ?? null)) onUpdate({ weight: val });
+  }
+  function blurOnEnter(e) {
+    if (e.key === 'Enter') e.target.blur();
+  }
+
+  return (
+    <tr className="border-t border-neutral-800">
+      <td className="py-1.5 pr-2 font-mono text-neutral-500">{set.set_number}</td>
+      <td className="py-1.5 pr-2">
+        <input
+          type="number"
+          inputMode="numeric"
+          className="input !py-1.5 text-center"
+          value={reps}
+          onChange={(e) => setReps(e.target.value)}
+          onBlur={commitReps}
+          onKeyDown={blurOnEnter}
+        />
+      </td>
+      <td className="py-1.5 pr-2">
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.5"
+            className="input !py-1.5 text-center"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            onBlur={commitWeight}
+            onKeyDown={blurOnEnter}
+          />
+          <span className="w-6 shrink-0 text-xs text-neutral-500">{weight !== '' ? set.weight_unit : ''}</span>
+        </div>
+      </td>
+      <td className="py-1.5 text-right">
+        <button className="text-neutral-600 hover:text-red-400" onClick={onDelete}>
+          ✕
+        </button>
+      </td>
+    </tr>
+  );
+}
+
 export default function ExerciseCard({ workoutId, we, onWorkoutUpdate, onRemove }) {
   const [lastSets, setLastSets] = useState(null);
-  const [draft, setDraft] = useState({ reps: '', weight: '', weight_unit: 'lb' });
-  const [saving, setSaving] = useState(false);
+  const [unit, setUnit] = useState('lb');
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
-    api.lastPerformance(we.exercise_id).then((res) => setLastSets(res.sets));
+    api.lastPerformance(we.exercise_id).then((res) => {
+      setLastSets(res.sets);
+      if (res.sets[0]?.weight_unit) setUnit(res.sets[0].weight_unit);
+    });
   }, [we.exercise_id]);
 
-  useEffect(() => {
-    if (lastSets === null) return;
-    const nextIndex = we.sets.length;
-    const fromLast = lastSets[nextIndex];
-    const fromThisSession = we.sets[we.sets.length - 1];
-    const source = fromThisSession || fromLast;
-    setDraft({
-      reps: source?.reps ?? '',
-      weight: source?.weight ?? '',
-      weight_unit: source?.weight_unit ?? 'lb',
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastSets, we.sets.length]);
-
-  async function logSet() {
-    setSaving(true);
+  async function addSet() {
+    setAdding(true);
     try {
+      const previous = we.sets[we.sets.length - 1];
+      const fallback = lastSets?.[0];
+      const source = previous || fallback;
       const payload = {
-        reps: draft.reps === '' ? null : Number(draft.reps),
-        weight: draft.weight === '' ? null : Number(draft.weight),
-        weight_unit: draft.weight_unit,
+        reps: source?.reps ?? null,
+        weight: source?.weight ?? null,
+        weight_unit: source?.weight_unit ?? unit,
       };
       const res = await api.addSet(workoutId, we.id, payload);
       onWorkoutUpdate(res.workout);
     } finally {
-      setSaving(false);
+      setAdding(false);
     }
+  }
+
+  async function updateSet(setId, patch) {
+    const workout = await api.updateSet(workoutId, setId, patch);
+    onWorkoutUpdate(workout);
   }
 
   async function deleteSet(setId) {
@@ -44,24 +98,22 @@ export default function ExerciseCard({ workoutId, we, onWorkoutUpdate, onRemove 
     onWorkoutUpdate(workout);
   }
 
-  const hasPrefill = lastSets && lastSets.length > 0 && we.sets.length < lastSets.length;
-
   return (
     <div className="card">
       <div className="flex items-start justify-between">
         <div>
-          <p className="font-semibold text-slate-900">{we.exercise_name}</p>
-          <p className="text-xs uppercase tracking-wide text-slate-400">{we.category?.replace('_', ' ')}</p>
+          <p className="font-semibold text-neutral-50">{we.exercise_name}</p>
+          <p className="text-xs uppercase tracking-wide text-neutral-500">{we.category?.replace('_', ' ')}</p>
         </div>
-        <button className="btn-ghost !px-2 !py-1 text-red-500" onClick={onRemove}>
+        <button className="btn-ghost !px-2 !py-1 text-red-400" onClick={onRemove}>
           Remove
         </button>
       </div>
 
-      {we.sets.length > 0 && (
+      {we.sets.length > 0 ? (
         <table className="mt-3 w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase text-slate-400">
+            <tr className="text-left text-xs uppercase text-neutral-500">
               <th className="w-8 pb-1">Set</th>
               <th className="pb-1">Reps</th>
               <th className="pb-1">Weight</th>
@@ -70,60 +122,23 @@ export default function ExerciseCard({ workoutId, we, onWorkoutUpdate, onRemove 
           </thead>
           <tbody>
             {we.sets.map((s) => (
-              <tr key={s.id} className="border-t border-slate-100">
-                <td className="py-1.5 text-slate-500">{s.set_number}</td>
-                <td className="py-1.5 font-medium text-slate-900">{s.reps ?? '—'}</td>
-                <td className="py-1.5 font-medium text-slate-900">
-                  {s.weight ?? '—'} {s.weight != null ? s.weight_unit : ''}
-                </td>
-                <td className="py-1.5 text-right">
-                  <button className="text-slate-300 hover:text-red-500" onClick={() => deleteSet(s.id)}>
-                    ✕
-                  </button>
-                </td>
-              </tr>
+              <SetRow key={s.id} set={s} onUpdate={(patch) => updateSet(s.id, patch)} onDelete={() => deleteSet(s.id)} />
             ))}
           </tbody>
         </table>
+      ) : (
+        <p className="mt-2 text-sm text-neutral-500">No sets yet.</p>
       )}
 
-      <div className="mt-3 flex items-end gap-2">
-        <div className="flex-1">
-          <label className="label">Reps</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            className="input"
-            value={draft.reps}
-            onChange={(e) => setDraft((d) => ({ ...d, reps: e.target.value }))}
-          />
-        </div>
-        <div className="flex-1">
-          <label className="label">Weight</label>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.5"
-            className="input"
-            value={draft.weight}
-            onChange={(e) => setDraft((d) => ({ ...d, weight: e.target.value }))}
-          />
-        </div>
-        <select
-          className="input w-16 shrink-0"
-          value={draft.weight_unit}
-          onChange={(e) => setDraft((d) => ({ ...d, weight_unit: e.target.value }))}
-        >
+      <div className="mt-3 flex items-center gap-2">
+        <button className="btn-primary flex-1" onClick={addSet} disabled={adding}>
+          + Add set
+        </button>
+        <select className="input w-16 shrink-0" value={unit} onChange={(e) => setUnit(e.target.value)}>
           <option value="lb">lb</option>
           <option value="kg">kg</option>
         </select>
-        <button className="btn-primary shrink-0" onClick={logSet} disabled={saving}>
-          + Set
-        </button>
       </div>
-      {hasPrefill && (
-        <p className="mt-1.5 text-xs text-slate-400">Prefilled from your last {we.exercise_name} session.</p>
-      )}
     </div>
   );
 }
