@@ -4,6 +4,7 @@ import WorkoutHistory from './components/WorkoutHistory.jsx';
 import ExerciseLibrary from './components/ExerciseLibrary.jsx';
 import RoutineBuilder from './components/RoutineBuilder.jsx';
 import MuscleCoverage from './components/MuscleCoverage.jsx';
+import Settings from './components/Settings.jsx';
 
 const TABS = [
   { to: '/', label: 'Log', icon: '🏋️', end: true },
@@ -11,6 +12,7 @@ const TABS = [
   { to: '/exercises', label: 'Exercises', icon: '📚' },
   { to: '/routine', label: 'Routine', icon: '🗓️' },
   { to: '/coverage', label: 'Coverage', icon: '🧍' },
+  { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export default function App() {
@@ -27,6 +29,7 @@ export default function App() {
           <Route path="/exercises" element={<ExerciseLibrary />} />
           <Route path="/routine" element={<RoutineBuilder />} />
           <Route path="/coverage" element={<MuscleCoverage />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

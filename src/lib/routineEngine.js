@@ -54,18 +54,14 @@ function clampDays(n) {
   return Math.max(1, Math.min(6, n));
 }
 
-function pickExercises(db, categories, count, variantOffset) {
-  // Fetch each category separately and round-robin merge them, so e.g. an
-  // "Upper" day (push + pull) actually alternates chest/shoulder/tricep
-  // movements with back/bicep movements instead of exhausting one category.
+// Round-robin merge exercises across categories, so e.g. an "Upper" day
+// (push + pull) alternates chest/shoulder/tricep movements with
+// back/bicep movements instead of exhausting one category first.
+function pickExercises(allExercises, categories, count, variantOffset) {
   const perCategoryLists = categories.map((cat) => {
-    const rows = db
-      .prepare(
-        `SELECT id, name, category, equipment FROM exercises
-         WHERE category = ? AND equipment != 'cardio_machine'
-         ORDER BY id`
-      )
-      .all(cat);
+    const rows = allExercises
+      .filter((e) => e.category === cat && e.equipment !== 'cardio_machine')
+      .sort((a, b) => a.id - b.id);
     if (rows.length === 0) return rows;
     const offset = variantOffset % rows.length;
     return rows.slice(offset).concat(rows.slice(0, offset));
@@ -89,13 +85,13 @@ function pickExercises(db, categories, count, variantOffset) {
   return result;
 }
 
-function pickCore(db, variantOffset) {
-  const rows = db.prepare(`SELECT id, name FROM exercises WHERE category = 'core' ORDER BY id`).all();
+function pickCore(allExercises, variantOffset) {
+  const rows = allExercises.filter((e) => e.category === 'core').sort((a, b) => a.id - b.id);
   if (rows.length === 0) return null;
   return rows[variantOffset % rows.length];
 }
 
-export function generateRoutine(db, { goal, experienceLevel, daysPerWeek }) {
+export function generateRoutine(allExercises, { goal, experienceLevel, daysPerWeek }) {
   const scheme = GOAL_SCHEMES[goal] || GOAL_SCHEMES.general_fitness;
   const exercisesPerDay = EXPERIENCE_COUNTS[experienceLevel] || EXPERIENCE_COUNTS.beginner;
   const requestedDays = clampDays(Number(daysPerWeek) || 3);
@@ -106,7 +102,7 @@ export function generateRoutine(db, { goal, experienceLevel, daysPerWeek }) {
     if (i < splitPlan.length) {
       const dayDef = splitPlan[i];
       const mainCount = dayDef.core ? Math.max(exercisesPerDay - 1, 2) : exercisesPerDay;
-      const picked = pickExercises(db, dayDef.categories, mainCount, i * 2);
+      const picked = pickExercises(allExercises, dayDef.categories, mainCount, i * 2);
       const exercises = picked.map((ex) => ({
         exercise_id: ex.id,
         name: ex.name,
@@ -114,7 +110,7 @@ export function generateRoutine(db, { goal, experienceLevel, daysPerWeek }) {
         target_reps: scheme.reps,
       }));
       if (dayDef.core) {
-        const core = pickCore(db, i);
+        const core = pickCore(allExercises, i);
         if (core) {
           exercises.push({
             exercise_id: core.id,

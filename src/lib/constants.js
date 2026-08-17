@@ -20,6 +20,22 @@ export const EQUIPMENT_OPTIONS = [
   'other',
 ];
 
+// The ~12 tracked muscle groups, tagged front/back/both for the coverage body map.
+export const MUSCLE_GROUPS = [
+  { name: 'chest', front_or_back: 'front' },
+  { name: 'shoulders', front_or_back: 'front' },
+  { name: 'biceps', front_or_back: 'front' },
+  { name: 'triceps', front_or_back: 'back' },
+  { name: 'forearms', front_or_back: 'both' },
+  { name: 'back', front_or_back: 'back' },
+  { name: 'traps', front_or_back: 'back' },
+  { name: 'core', front_or_back: 'front' },
+  { name: 'quads', front_or_back: 'front' },
+  { name: 'hamstrings', front_or_back: 'back' },
+  { name: 'glutes', front_or_back: 'back' },
+  { name: 'calves', front_or_back: 'both' },
+];
+
 export const MUSCLE_COLORS = {
   chest: '#0ea5e9',
   shoulders: '#38bdf8',
